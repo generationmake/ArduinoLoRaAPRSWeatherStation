@@ -43,7 +43,7 @@ jobs:
             - source-path: ./
             - source-url: https://github.com/sandeepmistry/arduino-LoRa.git
             - source-url: https://github.com/107-systems/107-Arduino-NMEA-Parser.git
-            - source-url: https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+            - source-url: https://github.com/sparkfun/SparkFun_BME280_Arduino_Library.git
 
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
           sketch-paths: ./
