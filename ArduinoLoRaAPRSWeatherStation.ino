@@ -211,7 +211,7 @@ const char *createaprsalt(float alt) {
 }
 
 const char *createweatherdata() {
-  static char buf[37]="c...s...g...t...r...p...P...h..b....";
+  static char buf[29]="g...t...r...p...P...h..b....";
 
   Serial.print("Humidity: ");
   float humidity=myBME280.readFloatHumidity();
@@ -225,15 +225,15 @@ const char *createweatherdata() {
   float temperatureF=myBME280.readTempF();
   Serial.print(temperatureF, 2);
 
-  buf[13]=(int)(temperatureF/100)%10+48;
-  buf[14]=(int)(temperatureF/10)%10+48;
-  buf[15]=(int)(temperatureF)%10+48;
-  buf[29]=(int)(humidity/10)%10+48;
-  buf[30]=(int)(humidity)%10+48;
-  buf[32]=(int)(pressure/1000)%10+48;
-  buf[33]=(int)(pressure/100)%10+48;
-  buf[34]=(int)(pressure/10)%10+48;
-  buf[35]=(int)(pressure)%10+48;
+  buf[5]=(int)(temperatureF/100)%10+48;
+  buf[6]=(int)(temperatureF/10)%10+48;
+  buf[7]=(int)(temperatureF)%10+48;
+  buf[21]=(int)(humidity/10)%10+48;
+  buf[22]=(int)(humidity)%10+48;
+  buf[24]=(int)(pressure/1000)%10+48;
+  buf[25]=(int)(pressure/100)%10+48;
+  buf[26]=(int)(pressure/10)%10+48;
+  buf[27]=(int)(pressure)%10+48;
 
   Serial.println(buf);
   return buf;
@@ -273,7 +273,7 @@ void sendposition(float lat, float lon, float alt) {
     LoRa.print(createcompressedaprscoords(lat, lon, alt, SYMBOLCODE)); // from gps data, using primary symbol table
     LoRa.print(createweatherdata()); // from BME280
 
-    if(count==0) LoRa.print("LoRa Arduino MKR WAN 1300"); // send comment every 10 messages
+    if(count==0) LoRa.print("Arduino WeatherStation"); // send comment every 10 messages
 //  LoRa.write((const uint8_t *)data.c_str(), data.length());
     LoRa.endPacket();
 
