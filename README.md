@@ -35,3 +35,4 @@ The APRS symbol code and SSID may be changed in lne 19 and 20.
 
   * 107-Arduino-NMEA-Parser https://github.com/107-systems/107-Arduino-NMEA-Parser
   * Arduino LoRa https://github.com/sandeepmistry/arduino-LoRa
+  * SparkFun BME280 https://github.com/sparkfun/SparkFun_BME280_Arduino_Library

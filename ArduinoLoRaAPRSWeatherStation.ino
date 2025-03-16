@@ -6,18 +6,21 @@
  * INCLUDE
  **************************************************************************************/
 
+#include <Wire.h>
 #include <SPI.h>
 #include <LoRa.h>
 //#include <MKRWAN.h>
 #include <ArduinoNmeaParser.h>
+
+#include "SparkFunBME280.h"
 
 /**************************************************************************************
  * CONSTANTS
  **************************************************************************************/
 
 static char const CALLSIGN[]="xxxxxx";
-static char const SYMBOLCODE='>';     // [ = Jogger; b = Bicycle; < = Motorcycle; > = Car; k = Truck
-static char const SSID='4';     // 4 = Bicycle; 10 = Motorcycle; 9 = Car; 14 = Truck
+static char const SYMBOLCODE='_';     // _ = WeatherStation
+static char const SSID='13';     // 13 = WeatherStation
 
 /**************************************************************************************
  * FUNCTION DECLARATION
@@ -35,18 +38,30 @@ const char *createaprscoords(float, float);
 //ArduinoNmeaParser parser(onRmcUpdate, onGgaUpdate);
 ArduinoNmeaParser parser(NULL, onGgaUpdate);
 int counter = 0;
+BME280 myBME280;
 
 /**************************************************************************************
  * SETUP/LOOP
  **************************************************************************************/
 
 void setup() {
+  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on
   Serial.begin(9600);
   Serial1.begin(9600);
 //  while (!Serial);
 
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.println("LoRa APRS Sender");
+
+// Configure BME280
+  Wire.begin();
+
+  myBME280.setI2CAddress(0x76);
+  if (myBME280.beginI2C() == false) //Begin communication over I2C
+  {
+    Serial.println("The BME280 did not respond. Please check wiring.");
+    while(1); //Freeze
+  }
 
 // Configure LoRa module to transmit and receive at the LoRa APRS frequency
   if (!LoRa.begin(433775000)) {
@@ -56,6 +71,7 @@ void setup() {
   LoRa.setSpreadingFactor(12);
   LoRa.setTxPower(20);
   LoRa.enableCrc();
+  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off
 }
 
 void loop()
@@ -108,43 +124,43 @@ void onRmcUpdate(nmea::RmcData const rmc)
 
 void onGgaUpdate(nmea::GgaData const gga)
 {
-  Serial.print("GGA ");
+//  Serial.print("GGA ");
 
-  if      (gga.source == nmea::GgaSource::GPS)     Serial.print("GPS");
-  else if (gga.source == nmea::GgaSource::GLONASS) Serial.print("GLONASS");
-  else if (gga.source == nmea::GgaSource::Galileo) Serial.print("Galileo");
-  else if (gga.source == nmea::GgaSource::GNSS)    Serial.print("GNSS");
-  else if (gga.source == nmea::GgaSource::BDS)     Serial.print("BDS");
+//  if      (gga.source == nmea::GgaSource::GPS)     Serial.print("GPS");
+//  else if (gga.source == nmea::GgaSource::GLONASS) Serial.print("GLONASS");
+//  else if (gga.source == nmea::GgaSource::Galileo) Serial.print("Galileo");
+//  else if (gga.source == nmea::GgaSource::GNSS)    Serial.print("GNSS");
+//  else if (gga.source == nmea::GgaSource::BDS)     Serial.print("BDS");
 
-  Serial.print(" ");
-  Serial.print(gga.time_utc.hour);
-  Serial.print(":");
-  Serial.print(gga.time_utc.minute);
-  Serial.print(":");
-  Serial.print(gga.time_utc.second);
-  Serial.print(".");
-  Serial.print(gga.time_utc.microsecond);
+//  Serial.print(" ");
+//  Serial.print(gga.time_utc.hour);
+//  Serial.print(":");
+//  Serial.print(gga.time_utc.minute);
+//  Serial.print(":");
+//  Serial.print(gga.time_utc.second);
+//  Serial.print(".");
+//  Serial.print(gga.time_utc.microsecond);
 
   if (gga.fix_quality != nmea::FixQuality::Invalid)
   {
-    Serial.print(" : LAT ");
-    Serial.print(gga.latitude);
-    Serial.print(" ° | LON ");
-    Serial.print(gga.longitude);
-    Serial.print(" ° | Num Sat. ");
-    Serial.print(gga.num_satellites);
-    Serial.print(" | HDOP =  ");
-    Serial.print(gga.hdop);
-    Serial.print(" m | Altitude ");
-    Serial.print(gga.altitude);
-    Serial.print(" m | Geoidal Separation ");
-    Serial.print(gga.geoidal_separation);
-    Serial.print(" m | APRS = ");
-    Serial.print(createaprscoords(gga.latitude,gga.longitude));
+//    Serial.print(" : LAT ");
+//    Serial.print(gga.latitude);
+//    Serial.print(" ° | LON ");
+//    Serial.print(gga.longitude);
+//    Serial.print(" ° | Num Sat. ");
+//    Serial.print(gga.num_satellites);
+//    Serial.print(" | HDOP =  ");
+//    Serial.print(gga.hdop);
+//    Serial.print(" m | Altitude ");
+//    Serial.print(gga.altitude);
+//    Serial.print(" m | Geoidal Separation ");
+//    Serial.print(gga.geoidal_separation);
+//    Serial.print(" m | APRS = ");
+//    Serial.print(createaprscoords(gga.latitude,gga.longitude));
     sendposition(gga.latitude,gga.longitude,gga.altitude);
   }
 
-  Serial.println();
+//  Serial.println();
 }
 
 const char *maidenhead(float lat, float lon)
@@ -231,13 +247,42 @@ const char *createaprsalt(float alt) {
   return buf;
 }
 
+const char *createweatherdata() {
+  static char buf[37]="c...s...g...t...r...p...P...h..b....";
+
+  Serial.print("Humidity: ");
+  float humidity=myBME280.readFloatHumidity();
+  Serial.print(humidity, 0);
+
+  Serial.print(" Pressure: ");
+  float pressure=myBME280.readFloatPressure();
+  Serial.print(pressure, 0);
+
+  Serial.print(" Temp: ");
+  float temperatureF=myBME280.readTempF();
+  Serial.print(temperatureF, 2);
+
+  buf[13]=(int)(temperatureF/100)%10+48;
+  buf[14]=(int)(temperatureF/10)%10+48;
+  buf[15]=(int)(temperatureF)%10+48;
+  buf[29]=(int)(humidity/10)%10+48;
+  buf[30]=(int)(humidity)%10+48;
+  buf[32]=(int)(pressure/1000)%10+48;
+  buf[33]=(int)(pressure/100)%10+48;
+  buf[34]=(int)(pressure/10)%10+48;
+  buf[35]=(int)(pressure)%10+48;
+
+  Serial.println(buf);
+  return buf;
+}
+
 void sendposition(float lat, float lon, float alt) {
   static unsigned long prev_tx = 0;
   unsigned long const now = millis();
   /* tx data every 2 minutes = 120000 ms */
   Serial.println();
-  Serial.print(createcompressedaprscoords(lat, lon, alt, SYMBOLCODE));
-  if((now - prev_tx) > 120000)
+//  Serial.print(createcompressedaprscoords(lat, lon, alt, SYMBOLCODE));
+  if((now - prev_tx) > 600000)
   {
     prev_tx=now;
     static int count = 0;
@@ -263,6 +308,7 @@ void sendposition(float lat, float lon, float alt) {
 
 //compressed
     LoRa.print(createcompressedaprscoords(lat, lon, alt, SYMBOLCODE)); // from gps data, using primary symbol table
+    LoRa.print(createweatherdata()); // from BME280
 
     if(count==0) LoRa.print("LoRa Arduino MKR WAN 1300"); // send comment every 10 messages
 //  LoRa.write((const uint8_t *)data.c_str(), data.length());
