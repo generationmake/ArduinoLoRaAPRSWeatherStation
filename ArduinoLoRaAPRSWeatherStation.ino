@@ -183,16 +183,17 @@ const char *createcompressedaprscoords(float lat, float lon, float alt, char sym
 
   buf[9]=symbolcode;
 
-  if(alt!=NULL)
-  {
-    float alt_feet=alt*3.281;
-
-    int ialt_cs=log(alt_feet)/log(1.002);
-    buf[10]=(ialt_cs%(91*91))/(91)+33;
-    buf[11]=ialt_cs%(91)+33;
-
-    buf[12]=81;
-  }
+// no altitude with weather data. should be wind speed and direction
+//  if(alt!=NULL)
+//  {
+//    float alt_feet=alt*3.281;
+//
+//    int ialt_cs=log(alt_feet)/log(1.002);
+//    buf[10]=(ialt_cs%(91*91))/(91)+33;
+//    buf[11]=ialt_cs%(91)+33;
+//
+//    buf[12]=81;
+//  }
 
   return buf;
 }
