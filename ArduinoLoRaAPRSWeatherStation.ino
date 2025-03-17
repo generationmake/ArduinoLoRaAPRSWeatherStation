@@ -226,9 +226,19 @@ const char *createweatherdata() {
   float temperatureF=myBME280.readTempF();
   Serial.print(temperatureF, 2);
 
-  buf[5]=(int)(temperatureF/100)%10+48;
-  buf[6]=(int)(temperatureF/10)%10+48;
-  buf[7]=(int)(temperatureF)%10+48;
+  if(temperatureF<0)
+  {
+    temperatureF=-1.0*temperatureF;
+    buf[5]='-';
+    buf[6]=(int)(temperatureF/10)%10+48;
+    buf[7]=(int)(temperatureF)%10+48;
+  }
+  else
+  {
+    buf[5]=(int)(temperatureF/100)%10+48;
+    buf[6]=(int)(temperatureF/10)%10+48;
+    buf[7]=(int)(temperatureF)%10+48;
+  }
   buf[21]=(int)(humidity/10)%10+48;
   buf[22]=(int)(humidity)%10+48;
   buf[24]=(int)(pressure/1000)%10+48;
