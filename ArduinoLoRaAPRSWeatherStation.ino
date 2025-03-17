@@ -20,7 +20,7 @@
 
 static char const CALLSIGN[]="xxxxxx";
 static char const SYMBOLCODE='_';     // _ = WeatherStation
-static char const SSID='13';     // 13 = WeatherStation
+static char const SSID[]="13";     // 13 = WeatherStation
 
 /**************************************************************************************
  * FUNCTION DECLARATION
@@ -244,7 +244,7 @@ void sendposition(float lat, float lon, float alt) {
   static unsigned long prev_tx = 0;
   unsigned long const now = millis();
   /* tx data every 2 minutes = 120000 ms */
-  Serial.println();
+//  Serial.println();
 //  Serial.print(createcompressedaprscoords(lat, lon, alt, SYMBOLCODE));
   if((now - prev_tx) > 600000)
   {
